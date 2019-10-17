@@ -3,7 +3,7 @@ numpy
 jupyter
 ipython
 easydict
-opencv-contrib-python
+opencv-contrib-python==4.0.0.21
 Cython
 pillow
 h5py
@@ -11,8 +11,13 @@ lmdb
 mahotas
 pandas
 requests
-web.py==0.40.dev0
+# web.py==0.40.dev0
 pika
 matplotlib
 lxml
 bs4
+tensorflow==1.13.1
+keras
+torch==1.0.0
+torchvision==0.3.0
+git+https://github.com/webpy/webpy.git#egg=webpy
