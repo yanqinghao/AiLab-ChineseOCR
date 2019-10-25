@@ -60,7 +60,7 @@ class ImageLoader(object):
             raise "Wrong type, make sure your image shape=(n,h,w,c) or (h,w,c)"
 
     def list_saver(self, data, name):
-        if isinstance(data[0], np.ndarray) and data[0].shape == 3:
+        if isinstance(data[0], np.ndarray) and len(data[0].shape) == 3:
             image.saves(os.path.join(self.folder, name), data)
         elif isinstance(data[0], tuple) and len(data[0]) == 2:
             for path, img in data:
