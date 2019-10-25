@@ -5,10 +5,82 @@ Created on Sun Aug  4 01:01:37 2019
 main 
 @author: chineseocr
 """
-from text.detector.detectors import TextDetector
 from apphelper.image import rotate_cut_img, sort_box
 import numpy as np
 from PIL import Image
+
+
+def detect_angle(img, angleModel):
+    """
+        detect text angle in [0,90,180,270]
+        @@img:np.array
+        """
+    angle = angleModel(img)
+    if angle == 90:
+        im = Image.fromarray(img).transpose(Image.ROTATE_90)
+        img = np.array(im)
+    elif angle == 180:
+        im = Image.fromarray(img).transpose(Image.ROTATE_180)
+        img = np.array(im)
+    elif angle == 270:
+        im = Image.fromarray(img).transpose(Image.ROTATE_270)
+        img = np.array(im)
+
+    return img, angle
+
+
+def detect_box(img, textModel, scale=600, maxScale=900):
+    """
+        detect text angle in [0,90,180,270]
+        @@img:np.array
+        """
+    boxes, scores = textModel(img, scale, maxScale)
+    return boxes, scores
+
+
+def box_cluster(
+    img,
+    boxes,
+    scores,
+    TextDetector,
+    MAX_HORIZONTAL_GAP=100,
+    MIN_V_OVERLAPS=0.6,
+    MIN_SIZE_SIM=0.6,
+    TEXT_PROPOSALS_MIN_SCORE=0.7,
+    TEXT_PROPOSALS_NMS_THRESH=0.3,
+    TEXT_LINE_NMS_THRESH=0.3,
+    LINE_MIN_SCORE=0.8,
+):
+
+    textdetector = TextDetector(MAX_HORIZONTAL_GAP, MIN_V_OVERLAPS, MIN_SIZE_SIM)
+
+    shape = img.shape[:2]
+
+    boxes, scores = textdetector.detect(
+        boxes,
+        scores[:, np.newaxis],
+        shape,
+        TEXT_PROPOSALS_MIN_SCORE,
+        TEXT_PROPOSALS_NMS_THRESH,
+        TEXT_LINE_NMS_THRESH,
+        LINE_MIN_SCORE,
+    )
+    return boxes, scores
+
+
+def ocr_batch(img, boxes, ocrModel, leftAdjustAlph=0.0, rightAdjustAlph=0.0):
+    """
+        batch for ocr
+        """
+    im = Image.fromarray(img)
+    newBoxes = []
+    for index, box in enumerate(boxes):
+        partImg, box = rotate_cut_img(im, box, leftAdjustAlph, rightAdjustAlph)
+        box["img"] = partImg.convert("L")
+        newBoxes.append(box)
+
+    res = ocrModel(newBoxes)
+    return res
 
 
 class TextOcrModel(object):

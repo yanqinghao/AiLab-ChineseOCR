@@ -1,0 +1,42 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                // "components.docker.SPAngleModel.SPAngleModel",
+                "components.docker.SPCRNN.SPCRNN",
+                // "components.docker.SPTextDetect.SPTextDetect",
+                "--storage-type",
+                "local",
+                // "--storage_local_temp_store",
+                // "/home/yanqinghao/demotmp",
+                "--inputImage",
+                "/home/yanqinghao/code/chineseocr/dataset/output/images",
+                "--inputBoxes",
+                "/home/yanqinghao/code/chineseocr/dataset/output/json",
+                // "--inputLoader",
+                // "/home/yanqinghao/code/AiLab-Pytorch/dataset/input/model",
+                "--outputImage",
+                "/home/yanqinghao/code/chineseocr/dataset/output/image2",
+                "--outputData",
+                "/home/yanqinghao/code/chineseocr/dataset/output/res",
+                // "--outputModel1",
+                // "/home/yanqinghao/code/AiLab-Pytorch/dataset/output/model1",
+                // "--outputModel2",
+                // "/home/yanqinghao/code/AiLab-Pytorch/dataset/output/model2",
+            ],
+            "env": {
+                "SP_APP_TYPE": "docker",
+                // "SP_SCREENSHOTS_STORAGE_KEY": "/home/yanqinghao/temp/screenshots"
+            }
+        }
+    ]
+}
