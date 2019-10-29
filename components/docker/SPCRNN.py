@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image
 from suanpan.app.arguments import Bool, Int, Json, Float
 from suanpan.app import app
+from suanpan.storage import storage
 from config import ocrModelTorchDense, ocrModelTorchLstm, ocrModelTorchEng
 from crnn.keys import alphabetChinese, alphabetEnglish
 from crnn.network_torch import CRNN
@@ -68,7 +69,9 @@ def SPCRNN(context):
             H, W = img.shape[:2]
             partImg = Image.fromarray(img)
             text = crnn.predict(partImg.convert("L"))
-            output["image"].append(images.images[i])
+            output["image"].append(
+                storage.delimiter.join(images.images[i].split(storage.delimiter)[8:])
+            )
             output["res"].append(
                 {"text": text, "name": "0", "box": [0, 0, W, 0, W, H, 0, H]}
             )
@@ -77,16 +80,24 @@ def SPCRNN(context):
         for i, img in enumerate(images):
             res = ocr_batch(
                 img,
-                boxes["boxes"][i],
+                boxes["boxes"][
+                    boxes["image"].index(
+                        storage.delimiter.join(
+                            images.images[i].split(storage.delimiter)[8:]
+                        )
+                    )
+                ],
                 crnn.predict_job,
                 args.leftAdjustAlph,
                 args.rightAdjustAlph,
             )
             for j, info in enumerate(res):
-                imgRes.append(("image_{}_{}".format(i, j), np.asarray(info["img"])))
+                imgRes.append(("image_{}_{}.png".format(i, j), np.asarray(info["img"])))
                 del info["img"]
 
-            output["image"].append(images.images[i])
+            output["image"].append(
+                storage.delimiter.join(images.images[i].split(storage.delimiter)[8:])
+            )
             output["res"].append(res)
 
     return output, imgRes

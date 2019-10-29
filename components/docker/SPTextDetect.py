@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function
 
 from suanpan.app.arguments import Json, Int, Float
 from suanpan.app import app
+from suanpan.storage import storage
 from arguments import Images
 from utils.function import box_cluster, detect_box
 from apphelper.image import sort_box
@@ -46,7 +47,9 @@ def SPTextDetect(context):
         )
         boxes = sort_box(boxes)
         res["boxes"].append(boxes)
-        res["image"].append(images.images[i])
+        res["image"].append(
+            storage.delimiter.join(images.images[i].split(storage.delimiter)[8:])
+        )
     return res
 
 
