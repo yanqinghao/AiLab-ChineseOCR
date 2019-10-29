@@ -64,7 +64,7 @@ class ImageLoader(object):
             image.saves(os.path.join(self.folder, name), data)
         elif isinstance(data[0], tuple) and len(data[0]) == 2:
             for path, img in data:
-                image.save(os.path.join(self.folder, path + ".png"), img)
+                image.save(os.path.join(self.folder, path), img)
         else:
             raise "Wrong type, make sure your image shape=(n,h,w,c)"
 
