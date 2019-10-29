@@ -1,4 +1,5 @@
 scipy
+pdf2image
 numpy
 jupyter
 ipython
