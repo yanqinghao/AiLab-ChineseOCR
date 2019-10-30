@@ -63,6 +63,9 @@ def SPIDDetect(context):
                     outputCsv[m["name"]] = [m["text"]]
                 else:
                     outputCsv[m["name"]].append(m["text"])
+    length = min([len(j) for i, j in outputCsv.items()])
+    for key, value in outputCsv.items():
+        outputCsv[key] = value[:length]
     outputCsv = pd.DataFrame(outputCsv)
 
     outputImages = []
