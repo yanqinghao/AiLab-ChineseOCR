@@ -22,7 +22,7 @@ WORKDIR /yanqing
 
 ENV PYPI_MIRROR "https://mirrors.aliyun.com/pypi/simple"
 
-RUN apt install poppler-utils
+RUN apt install poppler-utils -y
 
 RUN pip config set global.index-url ${PYPI_MIRROR}
 
