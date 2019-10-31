@@ -16,11 +16,11 @@ def SPRemoveWatermark(context):
     beta = -160
 
     outputImages = []
-    for img in images:
+    for i, img in enumerate(images):
         new = alpha * img + beta
         new = np.clip(new, 0, 255).astype(np.uint8)
         outputImages.append(
-            (storage.delimiter.join(img.split(storage.delimiter)[8:]), new)
+            (storage.delimiter.join(images.images[i].split(storage.delimiter)[8:]), new)
         )
 
     return outputImages
