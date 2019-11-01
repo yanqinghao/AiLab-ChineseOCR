@@ -68,18 +68,26 @@ class travelItinerary:
 
             res = re.findall("快车|出租车", txt)
             if len(res) > 0:
-                station["车型"].append(res[0])
-                res = re.findall("[0-9]{1,2}-[0-9]{2,4}[\.:-][0-9]{1,2}周[一二三四五六日]", txt)
-                if len(res) > 0:
+
+                state = {"金额": 0, "时间": 0, "起点": 0, "终点": 0, "城市": 0, "里程": 0, "车型": 0}
+                if state["车型"] == 0:
+                    station["车型"].append(res[0])
+                    state["车型"] = 1
+                res = re.findall(
+                    "[0-9]{1,2}-[0-9]{2,4}[\.:-]{0,2}[0-9]{1,2}周[一二三四五六日]", txt
+                )
+                if len(res) > 0 and state["时间"] == 0:
                     resDate = re.findall("[0-9]{1,2}-[0-9]{2}", txt)
-                    resTime = re.findall("[0-9]{1,2}[\.:-][0-9]{2}", txt)
+                    resTime = re.findall("[0-9]{1,2}[\.:-]{0,2}[0-9]{2}周", txt)
                     current_year = datetime.datetime.now().year
                     time_concat = (
                         str(current_year)
                         + "-"
                         + resDate[0]
                         + " "
-                        + resTime[0].replace("-", ":").replace(".", ":")
+                        + resTime[0].replace("周", "")[:2]
+                        + ":"
+                        + resTime[0].replace("周", "")[-2:]
                         + ":00"
                     )
                     if (
@@ -91,34 +99,69 @@ class travelItinerary:
                             + "-"
                             + resDate[0]
                             + " "
-                            + resTime[0].replace("-", ":").replace(".", ":")
+                            + resTime[0].replace("周", "")[:2]
+                            + ":"
+                            + resTime[0].replace("周", "")[-2:]
                             + ":00"
                         )
                     station["时间"].append(time_concat)
-                checkid = re.findall("快车|出租车", txt.split(" ")[0])
-                if len(checkid) == 0:
-                    txt = " ".join(txt.split(" ")[1:])
-                station["城市"].append(txt.split(" ")[0].split(res[0])[1])
-                station["起点"].append(txt.split(" ")[1])
-                station["终点"].append(txt.split(" ")[2])
+                    state["时间"] = 1
                 try:
-                    if len(txt.split(" ")[3].split(".")) <= 2:
-                        station["里程"].append(txt.split(" ")[3])
-                        station["金额"].append(txt.split(" ")[4])
-                    else:
-                        station["里程"].append(
-                            txt.split(" ")[3].split(".")[0]
-                            + "."
-                            + txt.split(" ")[3].split(".")[1][0]
-                        )
-                        station["金额"].append(
-                            txt.split(" ")[3].split(".")[1][1:]
-                            + "."
-                            + txt.split(" ")[3].split(".")[1][2]
-                        )
+                    txt = station["车型"][-1].join(txt.split(station["车型"][-1])[1:])
+                    if state["城市"] == 0:
+                        station["城市"].append(txt.split(res[0])[1].split(" ")[0])
+                        state["城市"] = 1
+                    txt = station["城市"][-1].join(txt.split(station["城市"][-1])[1:])
+                    if len(txt.split(" ")) <= 1:
+                        if len(re.findall("快车|出租车", self.result[i - 1]["text"])) == 0:
+                            txt = (
+                                txt
+                                + " "
+                                + self.result[i - 1]["text"]
+                            )
+                        if len(re.findall("快车|出租车", self.result[i + 1]["text"])) == 0:
+                            txt = txt + " " + self.result[i + 1]["text"]
+                    rest = ["起点", "终点", "里程", "金额"]
+                    rest_idx = 0
+                    for n in txt.split(" "):
+                        if len(n) > 0:
+                            if len(n.split(".")) <= 2:
+                                if rest_idx > 1:
+                                    station[rest[rest_idx]].append(
+                                        re.findall("[^一-龥]{3,8}", n)[0]
+                                    )
+                                else:
+                                    station[rest[rest_idx]].append(n)
+                                state[rest[rest_idx]] = 1
+                            else:
+                                if rest_idx > 1:
+                                    station[rest[rest_idx]].append(
+                                        re.findall(
+                                            "[^一-龥]{3,8}",
+                                            n.split(".")[0] + "." + n.split(".")[1][0],
+                                        )[0]
+                                    )
+                                    station[rest[rest_idx + 1]].append(
+                                        re.findall(
+                                            "[^一-龥]{3,8}",
+                                            n.split(".")[1][1:]
+                                            + "."
+                                            + n.split(".")[1][2],
+                                        )[0]
+                                    )
+                                else:
+                                    station[rest[rest_idx]].append(
+                                        n.split(".")[0] + "." + n.split(".")[1][0]
+                                    )
+                                    station[rest[rest_idx + 1]].append(
+                                        n.split(".")[1][1:] + "." + n.split(".")[1][2]
+                                    )
+                                state[rest[rest_idx]] = 1
+                                state[rest[rest_idx + 1]] = 1
+                            rest_idx += 1
+                    station = self.check(state, station)
                 except:
-                    station["里程"].append("0")
-                    station["金额"].append("0")
+                    station = self.check(state, station)
 
         self.res.update(station)
 
