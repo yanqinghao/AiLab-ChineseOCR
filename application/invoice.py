@@ -37,6 +37,7 @@ class invoice:
         self.basic_info()
         self.price()
         self.full_name()
+        self.check()
 
     def types(self):
         """
@@ -97,7 +98,7 @@ class invoice:
             txt = self.result[i]["text"].replace(" ", "")
             txt = txt.replace(" ", "")
             ##发票金额
-            res = re.findall("(小写)￥[0-9]{1,4}.[0-9]{1,2}", txt)
+            res = re.findall("\(小写\)￥[0-9]{1,4}.[0-9]{1,2}", txt)
             if len(res) > 0:
                 price["发票金额"] = res[0].replace("(小写)￥", "")
                 self.res.update(price)
@@ -110,9 +111,9 @@ class invoice:
         name = {}
         for i in range(self.N):
             txt = self.result[i]["text"]
-            txt = txt.split(" ")[0]
+            txt = txt.replace(" ", "")
             ##公司名称
-            res = re.findall("称:[一-龥]{4,20}", txt)
+            res = re.findall("称:[一-龥()]{4,20}", txt)
             if len(res) > 0:
                 if res[0].replace("称:", "") != "无锡雪浪数制科技有限公司":
                     name["名称"] = res[0].replace("称:", "")
@@ -122,5 +123,15 @@ class invoice:
                 if res[0].replace("纳税人识别号:", "") != "91320211MA1WJC2585":
                     name["纳税人识别号"] = res[0].replace("纳税人识别号:", "")
             if len(name) == 2:
+                self.res.update(name)
+
+    def check(self):
+        if len(self.res) < 7 and len(self.res) > 0:
+            updatekeys = set(
+                ["货物或应税劳务、服务名称", "发票代码", "发票号码", "开票日期", "校验码", "名称", "纳税人识别号", "发票金额"]
+            ) - set(self.res.keys())
+            for i in updatekeys:
+                name = {}
+                name[i] = "无"
                 self.res.update(name)
 
