@@ -28,7 +28,14 @@ def SPViaSegment(context):
         filename = os.path.splitext(j["vid"])[0] + "_" + j["av"]["1"] + ".png"
         xy = j["xy"][1:]
         img = image.read(os.path.join(images.folder, j["vid"]))
-        outputData.append((filename, img[xy[0] : xy[2], xy[1] : xy[3]]))
+        outputData.append(
+            (
+                filename,
+                img[
+                    int(xy[1]) : int(xy[1] + xy[3]), int(xy[0]) : int(xy[0] + xy[2]), :
+                ],
+            )
+        )
 
     for idx, img in enumerate(images):
         if images.images[idx] not in files:
