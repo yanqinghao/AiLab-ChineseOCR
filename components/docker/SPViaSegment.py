@@ -25,7 +25,10 @@ def SPViaSegment(context):
     files = []
     for i, j in fileInfo["metadata"].items():
         files.append(os.path.join(images.folder, j["vid"]))
-        filename = os.path.splitext(j["vid"])[0] + "_" + j["av"]["1"] + ".png"
+        try:
+            filename = os.path.splitext(j["vid"])[0] + "_" + j["av"]["1"] + ".png"
+        except:
+            filename = os.path.splitext(j["vid"])[0] + "_" + i.split("_")[-1] + ".png"
         xy = j["xy"][1:]
         img = image.read(os.path.join(images.folder, j["vid"]))
         outputData.append(
