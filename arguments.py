@@ -72,8 +72,10 @@ class ImageLoader(object):
 class Images(Folder):
     def format(self, context):
         super(Images, self).format(context)
-
-        self.value = ImageLoader(self.folderPath)
+        if self.folderPath:
+            self.value = ImageLoader(self.folderPath)
+        else:
+            self.value = None
 
         return self.value
 
