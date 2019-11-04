@@ -100,7 +100,7 @@ class invoice:
             ##发票金额
             res = re.findall("\(小写\)[￥Y][0-9]{1,4}.[0-9]{1,2}", txt)
             if len(res) > 0:
-                price["发票金额"] = res[0].replace("(小写)￥", "")
+                price["发票金额"] = res[0].replace("(小写)[￥Y]", "")
                 self.res.update(price)
                 break
 
