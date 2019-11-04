@@ -98,7 +98,7 @@ class invoice:
             txt = self.result[i]["text"].replace(" ", "")
             txt = txt.replace(" ", "")
             ##发票金额
-            res = re.findall("\(小写\)￥[0-9]{1,4}.[0-9]{1,2}", txt)
+            res = re.findall("\(小写\)[￥Y][0-9]{1,4}.[0-9]{1,2}", txt)
             if len(res) > 0:
                 price["发票金额"] = res[0].replace("(小写)￥", "")
                 self.res.update(price)
@@ -126,7 +126,7 @@ class invoice:
                 self.res.update(name)
 
     def check(self):
-        if len(self.res) < 7 and len(self.res) > 0:
+        if len(self.res) < 8 and len(self.res) > 0:
             updatekeys = set(
                 ["货物或应税劳务、服务名称", "发票代码", "发票号码", "开票日期", "校验码", "名称", "纳税人识别号", "发票金额"]
             ) - set(self.res.keys())
@@ -134,6 +134,7 @@ class invoice:
                 name = {}
                 name[i] = "无"
                 self.res.update(name)
+        if "货物或应税劳务、服务名称" in self.res.keys():
             if "机票" in self.res["货物或应税劳务、服务名称"]:
                 remarks = {}
                 for i in range(self.N):
