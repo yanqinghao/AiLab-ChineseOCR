@@ -134,4 +134,28 @@ class invoice:
                 name = {}
                 name[i] = "无"
                 self.res.update(name)
-
+            if "机票" in self.res["货物或应税劳务、服务名称"]:
+                remarks = {}
+                for i in range(self.N):
+                    txt = self.result[i]["text"]
+                    ##订单号 姓名 行程
+                    res = re.findall("订单号", txt)
+                    if len(res) > 0:
+                        try:
+                            res = re.findall("订单号[0-9]{10}", txt)
+                            remarks["订单号"] = res[0].replace("订单号", "")
+                            remarks["姓名"] = txt.split(",")[1]
+                            journey = txt.split(",")[3]
+                            remarks["起点"] = journey.split("-")[0]
+                            remarks["终点"] = journey.split("-")[1]
+                        except:
+                            for i in set(["订单号", "姓名", "起点", "终点"]) - set(
+                                remarks.keys()
+                            ):
+                                remarks[i] = "无"
+                        self.res.update(remarks)
+            else:
+                remarks = {}
+                for i in ["订单号", "姓名", "起点", "终点"]:
+                    remarks[i] = "无"
+                self.res.update(remarks)
