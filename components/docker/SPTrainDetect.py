@@ -56,7 +56,7 @@ def SPTrainDetect(context):
 
     outputCsv = {"image": []}
     for i, j in enumerate(output["image"]):
-        if output["res"][i]:
+        if len(output["res"][i]) == 7:
             outputCsv["image"].append(j)
             for m in output["res"][i]:
                 if m["name"] not in outputCsv.keys():
