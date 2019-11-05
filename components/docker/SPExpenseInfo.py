@@ -97,7 +97,7 @@ def SPExpenseInfo(context):
     outputDF = pd.DataFrame(outputDF)
     outputDF["日期"] = pd.to_datetime(outputDF["时间"], format="%Y-%m-%d")
     outputDF = outputDF.sort_values("日期").reset_index()
-    outputDF = outputDF.drop(["日期"], axis=1)
+    outputDF = outputDF.drop(["日期", "index"], axis=1)
     return outputDF, outputImages
 
 
