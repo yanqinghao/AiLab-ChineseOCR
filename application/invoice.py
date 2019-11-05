@@ -85,9 +85,7 @@ class invoice:
             res = re.findall("校验码:[0-9]{1,20}", txt)
             if len(res) > 0:
                 info["校验码"] = res[0].replace("校验码:", "")
-            if len(info) == 4:
-                self.res.update(info)
-                break
+        self.res.update(info)
 
     def price(self):
         """
