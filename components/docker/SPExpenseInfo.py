@@ -43,16 +43,13 @@ def SPExpenseInfo(context):
     outputDF = {"图片": [], "时间": [], "起点": [], "终点": [], "费用": [], "费用种类": []}
 
     if invoiceDF is not None:
-        trainDF["列车时刻"] = trainDF["日期"].str.cat(trainDF["时间"], sep=" ")
-        trainDF["列车时刻"] = pd.to_datetime(trainDF["列车时刻"], format="%Y-%m-%d %H:%M")
-        trainDF = trainDF.sort_values("列车时刻").reset_index()
         for i in range(len(trainDF)):
             outputDF = list_operation(
                 outputDF,
                 "append",
                 [
                     trainDF["image"][i],
-                    datetime.datetime.strftime(trainDF["列车时刻"][i], "%Y/%m/%d"),
+                    trainDF["日期"][i],
                     trainDF["出发"][i],
                     trainDF["到达"][i],
                     trainDF["车票价格"][i],
@@ -61,15 +58,13 @@ def SPExpenseInfo(context):
             )
 
     if invoiceDF is not None:
-        invoiceDF["发票日期"] = pd.to_datetime(invoiceDF["开票日期"], format="%Y-%m-%d")
-        invoiceDF = invoiceDF.sort_values("发票日期").reset_index()
         for i in range(len(invoiceDF)):
             outputDF = list_operation(
                 outputDF,
                 "append",
                 [
                     invoiceDF["image"][i],
-                    datetime.datetime.strftime(invoiceDF["发票日期"][i], "%Y/%m/%d"),
+                    invoiceDF["开票日期"][i],
                     invoiceDF["起点"][i],
                     invoiceDF["终点"][i],
                     invoiceDF["发票金额"][i],
@@ -78,15 +73,13 @@ def SPExpenseInfo(context):
             )
 
     if itineraryDF is not None:
-        itineraryDF["打车时刻"] = pd.to_datetime(itineraryDF["时间"], format="%Y-%m-%d %H:%M")
-        itineraryDF = itineraryDF.sort_values("打车时刻").reset_index()
         for i in range(len(itineraryDF)):
             outputDF = list_operation(
                 outputDF,
                 "append",
                 [
                     itineraryDF["image"][i],
-                    datetime.datetime.strftime(itineraryDF["打车时刻"][i], "%Y/%m/%d"),
+                    itineraryDF["时间"][i],
                     itineraryDF["起点"][i],
                     itineraryDF["终点"][i],
                     itineraryDF["金额"][i],
@@ -95,9 +88,11 @@ def SPExpenseInfo(context):
             )
 
     outputDF = pd.DataFrame(outputDF)
+    outputDF.loc[outputDF["时间"] == "无", ["时间"]] = "1900-01-01"
     outputDF["日期"] = pd.to_datetime(outputDF["时间"], format="%Y-%m-%d")
     outputDF = outputDF.sort_values("日期").reset_index()
     outputDF = outputDF.drop(["日期", "index"], axis=1)
+    outputDF.loc[outputDF["时间"] == "1900-01-01", ["时间"]] = "无"
     return outputDF, outputImages
 
 
