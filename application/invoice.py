@@ -47,7 +47,7 @@ class invoice:
         for i in range(self.N):
             txt = self.result[i]["text"]
 
-            res = re.findall("客运服务费 |机票 |住宿费", txt)
+            res = re.findall("客运服务费 |机票 |住宿费|技术服务", txt)
             if len(res) > 0:
                 types["货物或应税劳务、服务名称"] = txt.split(" ")[0]
 
