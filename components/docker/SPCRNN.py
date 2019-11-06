@@ -107,7 +107,7 @@ def SPCRNN(context):
         outputImageRaw.append(
             (
                 storage.delimiter.join(
-                    imageRaw.imageRaw[i].split(storage.delimiter)[8:]
+                    imageRaw.images[i].split(storage.delimiter)[8:]
                 ),
                 img,
             )
