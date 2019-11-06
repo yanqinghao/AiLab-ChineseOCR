@@ -120,8 +120,7 @@ class invoice:
             if len(res) > 0:
                 if res[0].replace("纳税人识别号:", "") != "91320211MA1WJC2585":
                     name["纳税人识别号"] = res[0].replace("纳税人识别号:", "")
-            if len(name) == 2:
-                self.res.update(name)
+        self.res.update(name)
 
     def check(self):
         if len(self.res) < 8 and len(self.res) > 0:
