@@ -15,17 +15,20 @@ from arguments import Images
 
 
 @app.input(Images(key="inputImage"))
+@app.input(Images(key="inputImageRaw"))
 @app.input(Json(key="inputBoxes"))
 @app.param(Bool(key="chineseModel", default=True))
 @app.param(Bool(key="LSTMFLAG", default=True))
 @app.param(Int(key="__gpu", default=0))
 @app.param(Float(key="leftAdjustAlph", default=0.01))
 @app.param(Float(key="rightAdjustAlph", default=0.01))
+@app.output(Images(key="outputImageRaw"))
 @app.output(Json(key="outputData"))
 @app.output(Images(key="outputImage"))
 def SPCRNN(context):
     args = context.args
     images = args.inputImage
+    imageRaw = args.inputImageRaw
     boxes = args.inputBoxes
     textLine = True
     LSTMFLAG = args.LSTMFLAG
@@ -99,8 +102,17 @@ def SPCRNN(context):
                 storage.delimiter.join(images.images[i].split(storage.delimiter)[8:])
             )
             output["res"].append(res)
-
-    return output, imgRes
+    outputImageRaw = []
+    for i, img in enumerate(imageRaw):
+        outputImageRaw.append(
+            (
+                storage.delimiter.join(
+                    imageRaw.imageRaw[i].split(storage.delimiter)[8:]
+                ),
+                img,
+            )
+        )
+    return outputImageRaw, output, imgRes
 
 
 if __name__ == "__main__":
