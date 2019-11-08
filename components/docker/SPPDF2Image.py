@@ -44,12 +44,14 @@ def SPPDF2Image(context):
     for pdf in pdfFiles:
         pages = convert_from_path(pdf, 500)
 
-        for page in pages:
+        for i, page in enumerate(pages):
             images.append(
                 (
                     os.path.splitext(
                         storage.delimiter.join(pdf.split(storage.delimiter)[8:])
                     )[0]
+                    + "_"
+                    + str(i)
                     + ".png",
                     np.asarray(page),
                 )
