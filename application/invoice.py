@@ -14,8 +14,10 @@ class invoice:
     发票结构化识别
     """
 
-    def __init__(self, result, img, angle):
-        self.result = union_rbox(result, 0.2)
+    def __init__(self, result, img, angle, **kw):
+        for name, value in kw.items():
+            setattr(self, name, value)
+        self.result = union_rbox(result, getattr(self, "alpha", 0.2))
         self.box = [
             {
                 "text": x["text"],
@@ -47,7 +49,7 @@ class invoice:
         for i in range(self.N):
             txt = self.result[i]["text"]
 
-            res = re.findall("客运服务费 |机票 |住宿费|技术服务", txt)
+            res = re.findall(getattr(self, "services", None), txt)
             if len(res) > 0:
                 types["货物或应税劳务、服务名称"] = txt.split(" ")[0]
 
@@ -64,14 +66,10 @@ class invoice:
             txt = self.result[i]["text"].replace(" ", "")
             txt = txt.replace(" ", "")
             ##匹配开票日期
-            res = re.findall("开票日期:[0-9]{1,4}年[0-9]{1,2}月[0-9]{1,2}日", txt)
+            res = re.findall(getattr(self, "date", None), txt)
             if len(res) > 0:
-                info["开票日期"] = (
-                    res[0]
-                    .replace("开票日期:", "")
-                    .replace("年", "-")
-                    .replace("月", "-")
-                    .replace("日", "")
+                info["开票日期"] = "-".join(
+                    re.sub("[一-龥]", "-", res[0].replace("开票日期:", "")).split("-")[:3]
                 )
             ##匹配发票代码
             res = re.findall("发票代码:[0-9]{1,20}", txt)
@@ -96,7 +94,7 @@ class invoice:
             txt = self.result[i]["text"].replace(" ", "")
             txt = txt.replace(" ", "")
             ##发票金额
-            res = re.findall("\(小写\)[￥Y][0-9]{1,4}.[0-9]{1,2}", txt)
+            res = re.findall(getattr(self, "money", None), txt)
             if len(res) > 0:
                 price["发票金额"] = re.findall("[0-9]{1,4}.[0-9]{1,2}", res[0])[0]
                 self.res.update(price)
