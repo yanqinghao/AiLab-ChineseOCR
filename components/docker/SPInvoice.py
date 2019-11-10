@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function
 import cv2
 import pandas as pd
 import numpy as np
-from suanpan.app.arguments import Csv, Json
+from suanpan.app.arguments import Csv, Json, String, Float
 from suanpan.app import app
 from suanpan.storage import storage
 from arguments import Images
@@ -14,6 +14,10 @@ from application import invoice
 @app.input(Images(key="inputImage"))
 @app.input(Json(key="detectedText"))
 @app.input(Csv(key="angles"))
+@app.param(Float(key="alpha", default=0.2))
+@app.param(String(key="services", default=r"客运服务费 |机票 |住宿费|技术服务|餐费"))
+@app.param(String(key="money", default=r"\(小写\)[￥Y一-龥][0-9]{1,5}.[0-9]{1,2}"))
+@app.param(String(key="date", default=r"开票日期:[0-9]{1,4}年[0-9]{1,2}月[0-9]{1,2}"))
 @app.output(Json(key="outputData1"))
 @app.output(Csv(key="outputData2"))
 @app.output(Images(key="outputImage"))
@@ -22,6 +26,12 @@ def SPInvoice(context):
     images = args.inputImage
     detectedText = args.detectedText
     angles = args.angles
+    params = {
+        "services": args.services,
+        "money": args.money,
+        "date": args.date,
+        "alpha": args.alpha,
+    }
     output = {"image": [], "res": [], "box": []}
     for i, img in enumerate(images):
         angle = (
@@ -45,6 +55,7 @@ def SPInvoice(context):
             ],
             img,
             angle,
+            **params
         )
         result = [{"text": res.res[key], "name": key, "box": {}} for key in res.res]
 
