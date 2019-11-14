@@ -9,6 +9,7 @@ from pdf2image import convert_from_path
 from suanpan.app.arguments import Folder
 from suanpan.app import app
 from suanpan.storage import storage
+from suanpan.utils import image
 from arguments import Images
 
 
@@ -40,24 +41,24 @@ def SPPDF2Image(context):
         )
 
     pdfFiles = find_all_images(pdfs)
-    images = []
     for pdf in pdfFiles:
         pages = convert_from_path(pdf, 500)
 
         for i, page in enumerate(pages):
-            images.append(
-                (
+            image.save(
+                os.path.join(
+                    args.outputImage,
                     os.path.splitext(
                         storage.delimiter.join(pdf.split(storage.delimiter)[8:])
                     )[0]
                     + "_"
                     + str(i)
                     + ".png",
-                    np.asarray(page),
-                )
+                ),
+                np.asarray(page),
             )
 
-    return images
+    return args.outputImage
 
 
 if __name__ == "__main__":

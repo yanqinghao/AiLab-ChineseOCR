@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function
 import pandas as pd
 from suanpan.app import app
 from suanpan.app.arguments import Csv
-from suanpan.storage import storage
+from suanpan import path
 from arguments import Images
 
 
@@ -33,11 +33,7 @@ def SPExpenseInfo(context):
     itineraryDF = args.inputItineraryData
     images = args.inputImage
 
-    outputImages = []
-    for i, img in enumerate(images):
-        outputImages.append(
-            (storage.delimiter.join(images.images[i].split(storage.delimiter)[8:]), img)
-        )
+    path.copy(images.folder, args.outputImage)
 
     outputDF = {"图片": [], "时间": [], "起点": [], "终点": [], "费用": [], "费用种类": []}
 
@@ -92,7 +88,7 @@ def SPExpenseInfo(context):
     outputDF = outputDF.sort_values("日期").reset_index()
     outputDF = outputDF.drop(["日期", "index"], axis=1)
     outputDF.loc[outputDF["时间"] == "1900-01-01", ["时间"]] = "无"
-    return outputDF, outputImages
+    return outputDF, args.outputImage
 
 
 if __name__ == "__main__":

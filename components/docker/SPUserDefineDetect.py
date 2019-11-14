@@ -1,12 +1,14 @@
 # coding=utf-8
 from __future__ import absolute_import, print_function
 
+import os
 import cv2
 import pandas as pd
 import numpy as np
 from suanpan.app.arguments import Csv, Json, String
 from suanpan.app import app
 from suanpan.storage import storage
+from suanpan.utils import image
 from arguments import Images
 from application import userDefine
 
@@ -74,7 +76,6 @@ def SPUserDefineDetect(context):
         outputCsv[key] = value[:length]
     outputCsv = pd.DataFrame(outputCsv)
 
-    outputImages = []
     for i, img in enumerate(images):
         boxArr = output["box"][
             output["image"].index(
@@ -89,11 +90,15 @@ def SPUserDefineDetect(context):
                 True,
                 (0, 0, 255),
             )
-        outputImages.append(
-            (storage.delimiter.join(images.images[i].split(storage.delimiter)[8:]), img)
+        image.save(
+            os.path.join(
+                args.outputImage,
+                storage.delimiter.join(images.images[i].split(storage.delimiter)[8:]),
+            ),
+            img,
         )
-
-    return output, outputCsv, outputImages
+        
+    return output, outputCsv, args.outputImage
 
 
 if __name__ == "__main__":

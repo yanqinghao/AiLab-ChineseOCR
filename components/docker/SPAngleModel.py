@@ -1,10 +1,13 @@
 # coding=utf-8
 from __future__ import absolute_import, print_function
 
+import os
 import pandas as pd
 from suanpan.app.arguments import Csv
 from suanpan.app import app
 from suanpan.storage import storage
+from suanpan.utils import image
+from suanpan import path
 from text.opencv_dnn_detect import angle_detect
 from utils.function import detect_angle
 from arguments import Images
@@ -17,23 +20,23 @@ from arguments import Images
 def SPAngleModel(context):
     args = context.args
     images = args.inputImage
-    outputImages = []
-    outputImageRaw = []
     outputData = {"image": [], "angle": []}
     for i, img in enumerate(images):
-        outputImageRaw.append(
-            (storage.delimiter.join(images.images[i].split(storage.delimiter)[8:]), img)
-        )
         img, angle = detect_angle(img, angle_detect)
-        outputImages.append(
-            (storage.delimiter.join(images.images[i].split(storage.delimiter)[8:]), img)
+        image.save(
+            os.path.join(
+                args.outputImage,
+                storage.delimiter.join(images.images[i].split(storage.delimiter)[8:]),
+            ),
+            img,
         )
         outputData["image"].append(
             storage.delimiter.join(images.images[i].split(storage.delimiter)[8:])
         )
         outputData["angle"].append(angle)
     outputData = pd.DataFrame(outputData)
-    return outputImages, outputImageRaw, outputData
+    path.copy(images.folder, args.outputImageRaw)
+    return args.outputImage, args.outputImageRaw, outputData
 
 
 if __name__ == "__main__":

@@ -1,8 +1,10 @@
 # coding=utf-8
 from __future__ import absolute_import, print_function
 
+import os
 from suanpan.app import app
 from suanpan.storage import storage
+from suanpan.utils import image
 from arguments import Images
 
 
@@ -20,19 +22,19 @@ def SPImgFloderMerge(context):
     images4 = args.inputImage4
     images5 = args.inputImage5
     inputImages = [images1, images2, images3, images4, images5]
-    outputImages = []
     for images in inputImages:
         if images:
             for i, img in enumerate(images):
-                outputImages.append(
-                    (
+                image.save(
+                    os.path.join(
+                        args.outputImage,
                         storage.delimiter.join(
                             images.images[i].split(storage.delimiter)[8:]
                         ),
-                        img,
-                    )
+                    ),
+                    img,
                 )
-    return outputImages
+    return args.outputImage
 
 
 if __name__ == "__main__":

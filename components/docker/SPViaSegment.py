@@ -18,7 +18,6 @@ def SPViaSegment(context):
     args = context.args
     images = args.inputImage
 
-    outputData = []
     files = []
 
     try:
@@ -36,31 +35,28 @@ def SPViaSegment(context):
                 )
             xy = j["xy"][1:]
             img = image.read(os.path.join(images.folder, j["vid"]))
-            outputData.append(
-                (
-                    filename,
-                    img[
-                        int(xy[1]) : int(xy[1] + xy[3]),
-                        int(xy[0]) : int(xy[0] + xy[2]),
-                        :,
-                    ],
-                )
+            image.save(
+                os.path.join(args.outputImage, filename),
+                img[
+                    int(xy[1]) : int(xy[1] + xy[3]), int(xy[0]) : int(xy[0] + xy[2]), :
+                ],
             )
     except:
         logger.info("can not find project.json or json format error")
 
     for idx, img in enumerate(images):
         if images.images[idx] not in files:
-            outputData.append(
-                (
+            image.save(
+                os.path.join(
+                    args.outputImage,
                     storage.delimiter.join(
                         images.images[idx].split(storage.delimiter)[8:]
                     ),
-                    img,
-                )
+                ),
+                img,
             )
 
-    return outputData
+    return args.outputImage
 
 
 if __name__ == "__main__":

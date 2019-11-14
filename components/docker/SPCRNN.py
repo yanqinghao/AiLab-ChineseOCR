@@ -2,11 +2,11 @@
 from __future__ import absolute_import, print_function
 
 import os
-import numpy as np
 from PIL import Image
 from suanpan.app.arguments import Bool, Int, Json, Float
 from suanpan.app import app
 from suanpan.storage import storage
+from suanpan import path
 from config import ocrModelTorchDense, ocrModelTorchLstm, ocrModelTorchEng
 from crnn.keys import alphabetChinese, alphabetEnglish
 from crnn.network_torch import CRNN
@@ -24,7 +24,6 @@ from arguments import Images
 @app.param(Float(key="rightAdjustAlph", default=0.01))
 @app.output(Images(key="outputImageRaw"))
 @app.output(Json(key="outputData"))
-@app.output(Images(key="outputImage"))
 def SPCRNN(context):
     args = context.args
     images = args.inputImage
@@ -67,7 +66,6 @@ def SPCRNN(context):
         textLine = False
     output = {"image": [], "res": []}
     if textLine:
-        imgRes = images.folder
         for i, img in enumerate(images):
             H, W = img.shape[:2]
             partImg = Image.fromarray(img)
@@ -79,7 +77,6 @@ def SPCRNN(context):
                 {"text": text, "name": "0", "box": [0, 0, W, 0, W, H, 0, H]}
             )
     else:
-        imgRes = []
         for i, img in enumerate(images):
             res = ocr_batch(
                 img,
@@ -95,24 +92,14 @@ def SPCRNN(context):
                 args.rightAdjustAlph,
             )
             for j, info in enumerate(res):
-                imgRes.append(("image_{}_{}.png".format(i, j), np.asarray(info["img"])))
                 del info["img"]
 
             output["image"].append(
                 storage.delimiter.join(images.images[i].split(storage.delimiter)[8:])
             )
             output["res"].append(res)
-    outputImageRaw = []
-    for i, img in enumerate(imageRaw):
-        outputImageRaw.append(
-            (
-                storage.delimiter.join(
-                    imageRaw.images[i].split(storage.delimiter)[8:]
-                ),
-                img,
-            )
-        )
-    return outputImageRaw, output, imgRes
+    path.copy(imageRaw.folder, args.outputImageRaw)
+    return args.outputImageRaw, output
 
 
 if __name__ == "__main__":

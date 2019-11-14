@@ -1,9 +1,11 @@
 # coding=utf-8
 from __future__ import absolute_import, print_function
 
+import os
 import numpy as np
 from suanpan.app import app
 from suanpan.storage import storage
+from suanpan.utils import image
 from arguments import Images
 
 
@@ -15,15 +17,18 @@ def SPRemoveWatermark(context):
     alpha = 2.0
     beta = -160
 
-    outputImages = []
     for i, img in enumerate(images):
         new = alpha * img + beta
         new = np.clip(new, 0, 255).astype(np.uint8)
-        outputImages.append(
-            (storage.delimiter.join(images.images[i].split(storage.delimiter)[8:]), new)
+        image.save(
+            os.path.join(
+                args.outputImage,
+                storage.delimiter.join(images.images[i].split(storage.delimiter)[8:]),
+            ),
+            new,
         )
 
-    return outputImages
+    return args.outputImage
 
 
 if __name__ == "__main__":

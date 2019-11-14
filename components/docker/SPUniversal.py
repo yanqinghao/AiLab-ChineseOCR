@@ -1,11 +1,13 @@
 # coding=utf-8
 from __future__ import absolute_import, print_function
 
+import os
 import cv2
 import numpy as np
 from suanpan.app.arguments import Csv, Json
 from suanpan.app import app
 from suanpan.storage import storage
+from suanpan.utils import image
 from arguments import Images
 from apphelper.image import union_rbox, adjust_box_to_origin
 
@@ -66,7 +68,6 @@ def SPUniversal(context):
         )
         output["res"].append(res)
 
-    outputImages = []
     for i, img in enumerate(images):
         boxArr = output["res"][
             output["image"].index(
@@ -81,11 +82,15 @@ def SPUniversal(context):
                 True,
                 (0, 0, 255),
             )
-        outputImages.append(
-            (storage.delimiter.join(images.images[i].split(storage.delimiter)[8:]), img)
+        image.save(
+            os.path.join(
+                args.outputImage,
+                storage.delimiter.join(images.images[i].split(storage.delimiter)[8:]),
+            ),
+            img,
         )
 
-    return output, outputImages
+    return output, args.outputImage
 
 
 if __name__ == "__main__":
