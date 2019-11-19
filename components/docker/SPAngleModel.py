@@ -28,7 +28,7 @@ def SPAngleModel(context):
                 args.outputImage,
                 storage.delimiter.join(images.images[i].split(storage.delimiter)[8:]),
             ),
-            img,
+            img[:, :, ::-1],
         )
         outputData["image"].append(
             storage.delimiter.join(images.images[i].split(storage.delimiter)[8:])
