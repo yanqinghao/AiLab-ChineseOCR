@@ -55,7 +55,7 @@ def SPPDF2Image(context):
                     + str(i)
                     + ".png",
                 ),
-                np.asarray(page),
+                np.asarray(page)[:, :, ::-1],
             )
 
     return args.outputImage

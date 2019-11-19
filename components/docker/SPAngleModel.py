@@ -22,7 +22,7 @@ def SPAngleModel(context):
     images = args.inputImage
     outputData = {"image": [], "angle": []}
     for i, img in enumerate(images):
-        img, angle = detect_angle(img, angle_detect)
+        img, angle = detect_angle(img[:, :, ::-1], angle_detect)
         image.save(
             os.path.join(
                 args.outputImage,

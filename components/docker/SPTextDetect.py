@@ -30,10 +30,10 @@ def SPTextDetect(context):
     res = {"image": [], "boxes": []}
     for i, img in enumerate(images):
         boxes, scores = detect_box(
-            img, text_detect, scale=scale, maxScale=maxScale
+            img[:, :, ::-1], text_detect, scale=scale, maxScale=maxScale
         )  ##文字检测
         boxes, scores = box_cluster(
-            img,
+            img[:, :, ::-1],
             boxes,
             scores,
             TextDetector,

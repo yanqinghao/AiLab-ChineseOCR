@@ -68,7 +68,7 @@ def SPCRNN(context):
     if textLine:
         for i, img in enumerate(images):
             H, W = img.shape[:2]
-            partImg = Image.fromarray(img)
+            partImg = Image.fromarray(img[:, :, ::-1])
             text = crnn.predict(partImg.convert("L"))
             output["image"].append(
                 storage.delimiter.join(images.images[i].split(storage.delimiter)[8:])
@@ -79,7 +79,7 @@ def SPCRNN(context):
     else:
         for i, img in enumerate(images):
             res = ocr_batch(
-                img,
+                img[:, :, ::-1],
                 boxes["boxes"][
                     boxes["image"].index(
                         storage.delimiter.join(
