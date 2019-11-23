@@ -16,7 +16,7 @@ class travelItinerary:
     """
 
     def __init__(self, result, img, angle):
-        self.result = union_rbox(result, 0.2)
+        self.result = union_rbox(result, 0.4)
         self.box = [
             {
                 "text": x["text"],
@@ -66,7 +66,7 @@ class travelItinerary:
         for i in range(self.N):
             txt = self.result[i]["text"]
 
-            res = re.findall("快车|出租车", txt)
+            res = re.findall("快车|出租车|专车", txt)
             if len(res) > 0:
 
                 state = {"金额": 0, "时间": 0, "起点": 0, "终点": 0, "城市": 0, "里程": 0, "车型": 0}
@@ -74,7 +74,7 @@ class travelItinerary:
                     station["车型"].append(res[0])
                     state["车型"] = 1
                 res = re.findall(
-                    "[0-9]{1,2}-[0-9]{2,4}[\.:-]{0,2}[0-9]{1,2}周[一二三四五六日]", txt
+                    "[0-9]{1,2}-[0-9]{2,4}[\.:-]{0,2}[0-9]{1,2}周[一二三四五六日曰]{0,1}", txt
                 )
                 if len(res) > 0 and state["时间"] == 0:
                     resDate = re.findall("[0-9]{1,2}-[0-9]{2}", txt)
@@ -109,7 +109,10 @@ class travelItinerary:
                 try:
                     txt = station["车型"][-1].join(txt.split(station["车型"][-1])[1:])
                     if state["城市"] == 0:
-                        station["城市"].append(txt.split(res[0])[1].split(" ")[0])
+                        if len(txt.split(res[0])[1].split(" ")[0])>0:
+                            station["城市"].append(txt.split(res[0])[1].split(" ")[0])
+                        else:
+                            station["城市"].append(txt.split(res[0])[1].split(" ")[1])
                         state["城市"] = 1
                     txt = station["城市"][-1].join(txt.split(station["城市"][-1])[1:])
                     if len(txt.split(" ")) <= 1:
