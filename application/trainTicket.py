@@ -14,8 +14,10 @@ class trainTicket:
     火车票结构化识别
     """
 
-    def __init__(self, result, img, angle):
-        self.result = union_rbox(result, 0.4)
+    def __init__(self, result, img, angle, **kw):
+        for name, value in kw.items():
+            setattr(self, name, value)
+        self.result = union_rbox(result, getattr(self, "alpha", 0.4))
         self.box = [
             {
                 "text": x["text"],

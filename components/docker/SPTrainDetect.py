@@ -5,7 +5,7 @@ import os
 import cv2
 import pandas as pd
 import numpy as np
-from suanpan.app.arguments import Csv, Json
+from suanpan.app.arguments import Csv, Json, Float
 from suanpan.app import app
 from suanpan.storage import storage
 from suanpan.utils import image
@@ -16,6 +16,7 @@ from application import trainTicket
 @app.input(Images(key="inputImage"))
 @app.input(Json(key="detectedText"))
 @app.input(Csv(key="angles"))
+@app.param(Float(key="alpha", default=0.4))
 @app.output(Json(key="outputData1"))
 @app.output(Csv(key="outputData2"))
 @app.output(Images(key="outputImage"))
