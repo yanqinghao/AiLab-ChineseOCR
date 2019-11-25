@@ -56,15 +56,30 @@ def SPTrainDetect(context):
         output["res"].append(result)
         output["box"].append(res.box)
 
-    outputCsv = {"image": []}
+    outputCsv = {
+        "image": [],
+        "出发": [],
+        "到达": [],
+        "车次": [],
+        "日期": [],
+        "时间": [],
+        "车票价格": [],
+        "姓名": [],
+    }
     for i, j in enumerate(output["image"]):
-        if len(output["res"][i]) == 7:
+        if len(output["res"][i]) > 2:
             outputCsv["image"].append(j)
+            fields = []
             for m in output["res"][i]:
-                if m["name"] not in outputCsv.keys():
-                    outputCsv[m["name"]] = [m["text"]]
-                else:
-                    outputCsv[m["name"]].append(m["text"])
+                outputCsv[m["name"]].append(m["text"])
+                fields.append(m["name"])
+            if len(fields) < 7:
+                for n in set(list(outputCsv.keys())) - set(fields + ["image"]):
+                    if n == "车票价格":
+                        outputCsv[n].append(0)
+                    else:
+                        outputCsv[n].append("无")
+
     length = min([len(j) for i, j in outputCsv.items()])
     for key, value in outputCsv.items():
         outputCsv[key] = value[:length]
