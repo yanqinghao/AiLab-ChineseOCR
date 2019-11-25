@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import, print_function
 
+import re
 import pandas as pd
 from suanpan.app import app
 from suanpan.app.arguments import Csv
@@ -84,10 +85,20 @@ def SPExpenseInfo(context):
 
     outputDF = pd.DataFrame(outputDF)
     outputDF.loc[outputDF["时间"] == "无", ["时间"]] = "1900-01-01"
+    errorFormat = []
+    errorDate = []
+    for i, date in enumerate(outputDF["时间"].values):
+        res = re.findall("[0-9]{4}-[0-9]{2}-[0-9]{2}", date)
+        if len(res) == 0:
+            errorFormat.append(i)
+            errorDate.append(date)
+            outputDF.loc[i, ["时间"]] = "1900-01-01"
     outputDF["日期"] = pd.to_datetime(outputDF["时间"], format="%Y-%m-%d")
     outputDF = outputDF.sort_values("日期").reset_index()
     outputDF = outputDF.drop(["日期", "index"], axis=1)
     outputDF.loc[outputDF["时间"] == "1900-01-01", ["时间"]] = "无"
+    for i, row in enumerate(errorFormat):
+        outputDF.loc[row, ["时间"]] = errorDate[i]
     return outputDF, args.outputImage
 
 
