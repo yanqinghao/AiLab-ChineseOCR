@@ -79,10 +79,6 @@ def SPTrainDetect(context):
                         outputCsv[n].append(0)
                     else:
                         outputCsv[n].append("无")
-
-    length = min([len(j) for i, j in outputCsv.items()])
-    for key, value in outputCsv.items():
-        outputCsv[key] = value[:length]
     outputCsv = pd.DataFrame(outputCsv)
 
     for i, img in enumerate(images):
