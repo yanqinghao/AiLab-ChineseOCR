@@ -15,7 +15,7 @@ class trainTicket:
     """
 
     def __init__(self, result, img, angle):
-        self.result = union_rbox(result, 0.2)
+        self.result = union_rbox(result, 0.4)
         self.box = [
             {
                 "text": x["text"],
@@ -46,21 +46,22 @@ class trainTicket:
         """
         station = {}
         for i in range(self.N):
-            txt = self.result[i]["text"].replace(" ", "")
-            txt = txt.replace(" ", "")
+            txt = self.result[i]["text"]
 
-            res = re.findall("[一-龥]+站", txt), re.findall("[一-龥]+站(.+?)[][一-龥]+站", txt)
-            if len(res[0]) > 1:
-                station["出发"], station["到达"] = (
-                    res[0][0].replace("站", ""),
-                    res[0][1].replace("站", ""),
-                )
-            if len(res[1]) > 0:
-                station["车次"] = res[1][0]
+            res = re.findall("[一-龥]+站", txt)
+            if len(res) > 0:
+                for value in res:
+                    if "出发" not in station.keys():
+                        station["出发"] = value
+                    else:
+                        station["到达"] = value
+            res = re.findall("([KGZTC]{1}[0-9]{1,4}) ", txt)
+            if len(res) > 0:
+                if "车次" not in station.keys():
+                    station["车次"] = res[0]
 
-            if len(station) > 0:
-                self.res.update(station)
-                break
+        if len(station) > 0:
+            self.res.update(station)
 
     def time(self):
         """
@@ -71,9 +72,9 @@ class trainTicket:
             txt = self.result[i]["text"].replace(" ", "")
             txt = txt.replace(" ", "")
             ##匹配日期
-            res = re.findall("[0-9]{1,4}年[0-9]{1,2}月[0-9]{1,2}日", txt)
+            res = re.findall("[0-9]{1,4}年[0-9]{1,2}月[0-9]{1,2}", txt)
             if len(res) > 0:
-                time["日期"] = res[0].replace("年", "-").replace("月", "-").replace("日", "")
+                time["日期"] = res[0].replace("年", "-").replace("月", "-")
                 ##匹配时间
                 res = re.findall("[0-9]{1,2}:[0-9]{1,2}", txt)
                 if len(res) > 0:
