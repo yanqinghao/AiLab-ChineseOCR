@@ -67,7 +67,7 @@ def SPTrainDetect(context):
         "姓名": [],
     }
     for i, j in enumerate(output["image"]):
-        if len(output["res"][i]) > 2:
+        if len(output["res"][i]) > 3:
             outputCsv["image"].append(j)
             fields = []
             for m in output["res"][i]:
