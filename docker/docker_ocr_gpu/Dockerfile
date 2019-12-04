@@ -4,8 +4,6 @@ FROM registry-vpc.cn-shanghai.aliyuncs.com/shuzhi/horovod_docker_base:${PYTHON_V
 
 ENV PYPI_MIRROR "https://mirrors.aliyun.com/pypi/simple"
 
-RUN apt-get update && apt-get install poppler-utils -y
-
 RUN pip config set global.index-url ${PYPI_MIRROR}
 
 RUN pip install --upgrade pip
@@ -23,6 +21,8 @@ FROM registry-vpc.cn-shanghai.aliyuncs.com/shuzhi/horovod_docker_base:${PYTHON_V
 WORKDIR /yanqing
 
 ENV PYPI_MIRROR "https://mirrors.aliyun.com/pypi/simple"
+
+RUN apt-get update && apt-get install poppler-utils -y && apt-get install tesseract-ocr -y
 
 RUN pip config set global.index-url ${PYPI_MIRROR}
 
