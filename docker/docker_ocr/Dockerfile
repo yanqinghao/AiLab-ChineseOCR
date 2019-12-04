@@ -22,7 +22,7 @@ WORKDIR /yanqing
 
 ENV PYPI_MIRROR "https://mirrors.aliyun.com/pypi/simple"
 
-RUN apt-get update && apt-get install poppler-utils -y
+RUN apt-get update && apt-get install poppler-utils -y && apt-get install tesseract-ocr -y
 
 RUN pip config set global.index-url ${PYPI_MIRROR}
 
