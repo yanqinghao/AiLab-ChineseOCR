@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Aug  4 01:01:37 2019
-火车票识别
-@author: chineseocr
+Created on 2019-12-04
+行程单识别
+@author: yanqing
 """
 import datetime
+import pytesseract
+from PIL import Image
 from apphelper.image import union_rbox, adjust_box_to_origin
 import re
 
 
 class travelItinerary:
     """
-    火车票结构化识别
+    行程单结构化识别
     """
 
     def __init__(self, result, img, angle):
@@ -37,6 +39,23 @@ class travelItinerary:
         self.types = {"DiDi": False, "Shenzhou": False}
         self.company()
         if self.types["DiDi"]:
+            for i, data in enumerate(self.box):
+                x = [data["box"][j] for j in range(0, 8, 2)]
+                y = [data["box"][j] for j in range(1, 9, 2)]
+                img_tmp = Image.fromarray(
+                    img[int(min(y)) : int(max(y)) + 1, int(min(x)) : int(max(x)) + 1, :]
+                )
+                tess_res = pytesseract.image_to_string(img_tmp, lang="chi_sim+eng")
+                km_price = re.findall("[0-9]{1,4}[.][0-9]{1,2}", tess_res)
+                cnt = 0
+                for j in data["text"].split(" "):
+                    tmp = re.findall("[一-龥]", j)
+                    if len(tmp) > 1:
+                        cnt += 1
+                    else:
+                        break
+                if len(km_price) > 0:
+                    self.box[i]["text"] = " ".join(data["text"].split(" ")[:cnt] + km_price)
             self.didi()
         if self.types["Shenzhou"]:
             self.shenzhou()
@@ -109,7 +128,7 @@ class travelItinerary:
                 try:
                     txt = station["车型"][-1].join(txt.split(station["车型"][-1])[1:])
                     if state["城市"] == 0:
-                        if len(txt.split(res[0])[1].split(" ")[0])>0:
+                        if len(txt.split(res[0])[1].split(" ")[0]) > 0:
                             station["城市"].append(txt.split(res[0])[1].split(" ")[0])
                         else:
                             station["城市"].append(txt.split(res[0])[1].split(" ")[1])
@@ -117,11 +136,7 @@ class travelItinerary:
                     txt = station["城市"][-1].join(txt.split(station["城市"][-1])[1:])
                     if len(txt.split(" ")) <= 1:
                         if len(re.findall("快车|出租车", self.result[i - 1]["text"])) == 0:
-                            txt = (
-                                txt
-                                + " "
-                                + self.result[i - 1]["text"]
-                            )
+                            txt = txt + " " + self.result[i - 1]["text"]
                         if len(re.findall("快车|出租车", self.result[i + 1]["text"])) == 0:
                             txt = txt + " " + self.result[i + 1]["text"]
                     rest = ["起点", "终点", "里程", "金额"]
