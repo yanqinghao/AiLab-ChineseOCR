@@ -30,7 +30,7 @@ RUN pip install --upgrade pip
 
 COPY --from=builder /build /yanqing
 
-RUN pip install -r requirements_gpu.txt
+RUN pip install -r requirements_gpu.txt && mv /yanqing/tools/chi_sim.traineddata /usr/share/tesseract-ocr/4.00/tessdata/chi_sim.traineddata
 
 ENTRYPOINT [ "/sbin/my_init", "--" ]
 
