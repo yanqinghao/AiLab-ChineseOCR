@@ -83,7 +83,7 @@ class travelItinerary:
         """
         station = {"车型": [], "时间": [], "城市": [], "起点": [], "终点": [], "里程": [], "金额": []}
         for i in range(self.N):
-            txt = self.result[i]["text"]
+            txt = self.box[i]["text"]
 
             res = re.findall("快车|出租车|专车", txt)
             if len(res) > 0:
@@ -135,10 +135,10 @@ class travelItinerary:
                         state["城市"] = 1
                     txt = station["城市"][-1].join(txt.split(station["城市"][-1])[1:])
                     if len(txt.split(" ")) <= 1:
-                        if len(re.findall("快车|出租车", self.result[i - 1]["text"])) == 0:
-                            txt = txt + " " + self.result[i - 1]["text"]
-                        if len(re.findall("快车|出租车", self.result[i + 1]["text"])) == 0:
-                            txt = txt + " " + self.result[i + 1]["text"]
+                        if len(re.findall("快车|出租车", self.box[i - 1]["text"])) == 0:
+                            txt = txt + " " + self.box[i - 1]["text"]
+                        if len(re.findall("快车|出租车", self.box[i + 1]["text"])) == 0:
+                            txt = txt + " " + self.box[i + 1]["text"]
                     rest = ["起点", "终点", "里程", "金额"]
                     rest_idx = 0
                     for n in txt.split(" "):
