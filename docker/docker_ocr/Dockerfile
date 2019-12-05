@@ -30,6 +30,8 @@ RUN pip install --upgrade pip
 
 COPY --from=builder /build /yanqing
 
+RUN pip install ./whl/cpu/torch-1.0.0-cp37-cp37m-linux_x86_64.whl
+
 RUN pip install -r requirements_cpu.txt && mv /yanqing/tools/chi_sim.traineddata /usr/share/tesseract-ocr/4.00/tessdata/chi_sim.traineddata
 
 ENTRYPOINT [ "/sbin/my_init", "--" ]
