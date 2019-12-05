@@ -55,7 +55,9 @@ class travelItinerary:
                     else:
                         break
                 if len(km_price) > 0:
-                    self.box[i]["text"] = " ".join(data["text"].split(" ")[:cnt] + km_price)
+                    self.box[i]["text"] = " ".join(
+                        data["text"].split(" ")[:cnt] + km_price
+                    )
             self.didi()
         if self.types["Shenzhou"]:
             self.shenzhou()
@@ -68,12 +70,12 @@ class travelItinerary:
             txt = self.result[i]["text"].replace(" ", "")
             txt = txt.replace(" ", "")
 
-            res = re.findall("滴滴出行|神州专车电子行程单", txt)
+            res = re.findall("滴滴出行|神州专车电子行程单|神州专车电子行程", txt)
             if len(res) > 0:
                 if res[0] == "滴滴出行":
                     self.types["DiDi"] = True
                     break
-                elif res[0] == "神州专车电子行程单":
+                elif res[0] in ["神州专车电子行程单", "神州专车电子行程"]:
                     self.types["Shenzhou"] = True
                     break
 
