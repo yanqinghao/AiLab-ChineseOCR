@@ -6,6 +6,7 @@ import suanpan
 from PIL import Image
 from suanpan.app import app
 from suanpan import g
+from suanpan.utils import image
 from suanpan.storage import storage
 from suanpan.app.arguments import Bool, Int, Json, Float
 from utils.function import box_cluster, detect_box, detect_angle, ocr_batch
@@ -114,7 +115,7 @@ def SPOCRComac(context):
             )
         )
         storage.download(objectName, filePath)
-        img = Image.open(filePath)
+        img = image.read(filePath)[:, :, ::-1]
         img, angle = detect_angle(img, angle_detect)
 
         boxes, scores = detect_box(
@@ -139,7 +140,8 @@ def SPOCRComac(context):
             textLine = False
         if textLine:
             H, W = img.shape[:2]
-            text = crnn.predict(img.convert("L"))
+            partImg = Image.fromarray(img)
+            text = crnn.predict(partImg.convert("L"))
             output.update(
                 {
                     objectName: {
