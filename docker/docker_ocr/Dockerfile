@@ -2,7 +2,7 @@ ARG PYTHON_VERSION=3.7
 
 ARG NAME_SPACE
 
-FROM registry-vpc.cn-shanghai.aliyuncs.com/${NAME_SPACE}/docker_base:${PYTHON_VERSION} as builder
+FROM registry-vpc.cn-shanghai.aliyuncs.com/${NAME_SPACE}/suanpan-python-sdk:${PYTHON_VERSION} as builder
 
 ENV PYPI_MIRROR "https://mirrors.aliyun.com/pypi/simple"
 
@@ -18,7 +18,7 @@ COPY . /build
 
 RUN bash tools/compress.sh
 
-FROM registry-vpc.cn-shanghai.aliyuncs.com/${NAME_SPACE}/docker_base:${PYTHON_VERSION}
+FROM registry-vpc.cn-shanghai.aliyuncs.com/${NAME_SPACE}/suanpan-python-sdk:${PYTHON_VERSION}
 
 WORKDIR /yanqing
 
@@ -31,8 +31,6 @@ RUN pip config set global.index-url ${PYPI_MIRROR}
 RUN pip install --upgrade pip
 
 COPY --from=builder /build /yanqing
-
-RUN pip install ./whl/cpu/torch-1.0.0-cp37-cp37m-linux_x86_64.whl
 
 RUN pip install -r requirements_cpu.txt && mv /yanqing/tools/chi_sim.traineddata /usr/share/tesseract-ocr/4.00/tessdata/chi_sim.traineddata
 
