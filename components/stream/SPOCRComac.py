@@ -52,7 +52,7 @@ def afterInit(context):
 @app.param(Float(key="rightAdjustAlph", default=0.01))
 @app.param(Int(key="scale", default=608))
 @app.param(Int(key="maxScale", default=608))
-@app.param(Float(key="maxHorizontalGap", default=100))
+@app.param(Int(key="maxHorizontalGap", default=100))
 @app.param(Float(key="minVOverlaps", default=0.6))
 @app.param(Float(key="minSizeSim", default=0.6))
 @app.param(Float(key="textProposalsMinScore", default=0.1))
