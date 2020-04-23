@@ -66,112 +66,123 @@ def SPOCRComac(context):
     args = context.args
     inputImage = args.inputData1
 
-    if inputImage.get("parameter"):
-        PARAMETER.update(inputImage["parameter"])
+    try:
+        if inputImage.get("parameter"):
+            PARAMETER.update(inputImage["parameter"])
 
-    textLine = True
-    LSTMFLAG = PARAMETER["LSTMFLAG"]
-    if PARAMETER["chineseModel"]:
-        alphabet = alphabetChinese
-        if LSTMFLAG:
-            ocrModel = ocrModelTorchLstm
+        textLine = True
+        LSTMFLAG = PARAMETER["LSTMFLAG"]
+        if PARAMETER["chineseModel"]:
+            alphabet = alphabetChinese
+            if LSTMFLAG:
+                ocrModel = ocrModelTorchLstm
+            else:
+                ocrModel = ocrModelTorchDense
         else:
-            ocrModel = ocrModelTorchDense
-    else:
-        ocrModel = ocrModelTorchEng
-        alphabet = alphabetEnglish
-        LSTMFLAG = True
+            ocrModel = ocrModelTorchEng
+            alphabet = alphabetEnglish
+            LSTMFLAG = True
 
-    nclass = len(alphabet) + 1
+        nclass = len(alphabet) + 1
 
-    GPU = True if PARAMETER["GPU"] > 0 else False
+        GPU = True if PARAMETER["GPU"] > 0 else False
 
-    crnn = CRNN(
-        32,
-        1,
-        nclass,
-        256,
-        leakyRelu=False,
-        lstmFlag=LSTMFLAG,
-        GPU=GPU,
-        alphabet=alphabet,
-    )
-
-    if os.path.exists(ocrModel):
-        crnn.load_weights(ocrModel)
-    else:
-        print("download model or tranform model with tools!")
-
-    images = [inputImage["data"]]
-    output = {}
-    for i, image_base64 in enumerate(images):
-        filePath = "image.png"
-        with open(filePath, "wb") as f:
-            f.write(base64.b64decode(image_base64))
-        img = image.read(filePath)[:, :, ::-1]
-        img, angle = detect_angle(img, angle_detect)
-
-        boxes, scores = detect_box(
-            img, text_detect, scale=PARAMETER["scale"], maxScale=PARAMETER["maxScale"]
+        crnn = CRNN(
+            32,
+            1,
+            nclass,
+            256,
+            leakyRelu=False,
+            lstmFlag=LSTMFLAG,
+            GPU=GPU,
+            alphabet=alphabet,
         )
-        boxes, scores = box_cluster(
-            img,
-            boxes,
-            scores,
-            TextDetector,
-            MAX_HORIZONTAL_GAP=PARAMETER["maxHorizontalGap"],  ##字符之间的最大间隔，用于文本行的合并
-            MIN_V_OVERLAPS=PARAMETER["minVOverlaps"],
-            MIN_SIZE_SIM=PARAMETER["minSizeSim"],
-            TEXT_PROPOSALS_MIN_SCORE=PARAMETER["textProposalsMinScore"],
-            TEXT_PROPOSALS_NMS_THRESH=PARAMETER["textProposalsNmsThresh"],
-            TEXT_LINE_NMS_THRESH=PARAMETER["textLineNmsThresh"],  ##文本行之间测iou值
-            LINE_MIN_SCORE=PARAMETER["lineMinScore"],
-        )
-        boxes = sort_box(boxes)
 
-        if boxes:
-            textLine = False
-        if textLine:
-            H, W = img.shape[:2]
-            partImg = Image.fromarray(img)
-            text = crnn.predict(partImg.convert("L"))
-            output.update(
-                {i: {"text": text, "name": "0", "box": [0, 0, W, 0, W, H, 0, H]}}
+        if os.path.exists(ocrModel):
+            crnn.load_weights(ocrModel)
+        else:
+            print("download model or tranform model with tools!")
+
+        images = [inputImage["data"]]
+        output = {}
+        for i, image_base64 in enumerate(images):
+            filePath = "image.png"
+            with open(filePath, "wb") as f:
+                f.write(base64.b64decode(image_base64))
+            img = image.read(filePath)[:, :, ::-1]
+            img, angle = detect_angle(img, angle_detect)
+
+            boxes, scores = detect_box(
+                img,
+                text_detect,
+                scale=PARAMETER["scale"],
+                maxScale=PARAMETER["maxScale"],
             )
-        else:
-            res = ocr_batch(
+            boxes, scores = box_cluster(
                 img,
                 boxes,
-                crnn.predict_job,
-                PARAMETER["leftAdjustAlph"],
-                PARAMETER["rightAdjustAlph"],
+                scores,
+                TextDetector,
+                MAX_HORIZONTAL_GAP=PARAMETER["maxHorizontalGap"],  ##字符之间的最大间隔，用于文本行的合并
+                MIN_V_OVERLAPS=PARAMETER["minVOverlaps"],
+                MIN_SIZE_SIM=PARAMETER["minSizeSim"],
+                TEXT_PROPOSALS_MIN_SCORE=PARAMETER["textProposalsMinScore"],
+                TEXT_PROPOSALS_NMS_THRESH=PARAMETER["textProposalsNmsThresh"],
+                TEXT_LINE_NMS_THRESH=PARAMETER["textLineNmsThresh"],  ##文本行之间测iou值
+                LINE_MIN_SCORE=PARAMETER["lineMinScore"],
             )
-            for j, info in enumerate(res):
-                del info["img"]
-            output.update({i: res})
+            boxes = sort_box(boxes)
 
-        result = union_rbox(output[i], 0.2)
-        res = [
-            {
-                "text": x["text"],
-                "name": str(i),
-                "box": {
-                    "cx": x["cx"],
-                    "cy": x["cy"],
-                    "w": x["w"],
-                    "h": x["h"],
-                    "angle": x["degree"],
-                },
-            }
-            for i, x in enumerate(result)
-        ]
-        res = (
-            adjust_box_to_origin(img, angle, res)
-            if angle is not None
-            else adjust_box_to_origin(img, 0, res)
-        )
-        output.update({i: res})
-    return output
+            if boxes:
+                textLine = False
+            if textLine:
+                H, W = img.shape[:2]
+                partImg = Image.fromarray(img)
+                text = crnn.predict(partImg.convert("L"))
+                output.update(
+                    {i: {"text": text, "name": "0", "box": [0, 0, W, 0, W, H, 0, H]}}
+                )
+            else:
+                res = ocr_batch(
+                    img,
+                    boxes,
+                    crnn.predict_job,
+                    PARAMETER["leftAdjustAlph"],
+                    PARAMETER["rightAdjustAlph"],
+                )
+                for j, info in enumerate(res):
+                    del info["img"]
+                output.update({i: res})
+
+            result = union_rbox(output[i], 0.2)
+            res = [
+                {
+                    "text": x["text"],
+                    "name": str(i),
+                    "box": {
+                        "cx": x["cx"],
+                        "cy": x["cy"],
+                        "w": x["w"],
+                        "h": x["h"],
+                        "angle": x["degree"],
+                    },
+                }
+                for i, x in enumerate(result)
+            ]
+            res = (
+                adjust_box_to_origin(img, angle, res)
+                if angle is not None
+                else adjust_box_to_origin(img, 0, res)
+            )
+            output.update({i: res})
+        return {"data": output, "status": "success", "reason": None, "log": None}
+    except Exception as e:
+        return {
+            "data": None,
+            "status": "fail",
+            "reason": "请上传大于600*600的图片",
+            "log": str(e),
+        }
 
 
 if __name__ == "__main__":
