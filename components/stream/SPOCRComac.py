@@ -107,7 +107,7 @@ def SPOCRComac(context):
     for i, image_base64 in enumerate(images):
         filePath = "image.png"
         with open(filePath, "wb") as f:
-            f.write(base64.decodebytes(image_base64))
+            f.write(base64.b64decode(image_base64))
         img = image.read(filePath)[:, :, ::-1]
         img, angle = detect_angle(img, angle_detect)
 
