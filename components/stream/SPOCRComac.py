@@ -136,13 +136,7 @@ def SPOCRComac(context):
             partImg = Image.fromarray(img)
             text = crnn.predict(partImg.convert("L"))
             output.update(
-                {
-                    objectName: {
-                        "text": text,
-                        "name": "0",
-                        "box": [0, 0, W, 0, W, H, 0, H],
-                    }
-                }
+                {i: {"text": text, "name": "0", "box": [0, 0, W, 0, W, H, 0, H]}}
             )
         else:
             res = ocr_batch(
@@ -154,9 +148,9 @@ def SPOCRComac(context):
             )
             for j, info in enumerate(res):
                 del info["img"]
-            output.update({objectName: res})
+            output.update({i: res})
 
-        result = union_rbox(output[objectName], 0.2)
+        result = union_rbox(output[i], 0.2)
         res = [
             {
                 "text": x["text"],
@@ -176,7 +170,7 @@ def SPOCRComac(context):
             if angle is not None
             else adjust_box_to_origin(img, 0, res)
         )
-        output.update({objectName: res})
+        output.update({i: res})
     return output
 
 
