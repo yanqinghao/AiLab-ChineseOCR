@@ -20,7 +20,7 @@ RUN bash tools/compress.sh
 
 FROM registry-vpc.cn-shanghai.aliyuncs.com/${NAME_SPACE}/suanpan-python-sdk:${PYTHON_VERSION}
 
-WORKDIR /yanqing
+WORKDIR /workspace
 
 ENV PYPI_MIRROR "https://mirrors.aliyun.com/pypi/simple"
 
@@ -30,9 +30,9 @@ RUN pip config set global.index-url ${PYPI_MIRROR}
 
 RUN pip install --upgrade pip
 
-COPY --from=builder /build /yanqing
+COPY --from=builder /build /workspace
 
-RUN pip install -r requirements_cpu.txt && mv /yanqing/tools/chi_sim.traineddata /usr/share/tesseract-ocr/4.00/tessdata/chi_sim.traineddata
+RUN pip install -r requirements_cpu.txt && mv /workspace/tools/chi_sim.traineddata /usr/share/tesseract-ocr/4.00/tessdata/chi_sim.traineddata && mv /workspace/tools/eng.traineddata /usr/share/tesseract-ocr/4.00/tessdata/eng.traineddata
 
 ENTRYPOINT [ "/sbin/my_init", "--" ]
 
