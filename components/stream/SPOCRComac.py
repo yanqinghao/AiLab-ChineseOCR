@@ -2,12 +2,11 @@
 from __future__ import absolute_import, print_function
 
 import os
+import base64
 import suanpan
 from PIL import Image
 from suanpan.app import app
-from suanpan import g
 from suanpan.utils import image
-from suanpan.storage import storage
 from suanpan.app.arguments import Bool, Int, Json, Float
 from utils.function import box_cluster, detect_box, detect_angle, ocr_batch
 from text.keras_detect import text_detect
@@ -103,18 +102,12 @@ def SPOCRComac(context):
     else:
         print("download model or tranform model with tools!")
 
-    images = inputImage["file_path"]
+    images = [inputImage["data"]]
     output = {}
-    for i, objectName in enumerate(images):
-        filePath = storage.getPathInTempStore(
-            storage.storagePathJoin(
-                "studio",
-                g.userId,
-                g.appId,
-                "-".join(objectName.split(storage.delimiter)),
-            )
-        )
-        storage.download(objectName, filePath)
+    for i, image_base64 in enumerate(images):
+        filePath = "image.png"
+        with open(filePath, "wb") as f:
+            f.write(base64.decodebytes(image_base64))
         img = image.read(filePath)[:, :, ::-1]
         img, angle = detect_angle(img, angle_detect)
 
