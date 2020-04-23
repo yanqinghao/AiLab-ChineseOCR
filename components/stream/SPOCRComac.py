@@ -7,6 +7,7 @@ import suanpan
 from PIL import Image
 from suanpan.app import app
 from suanpan.utils import image
+from suanpan.log import logger
 from suanpan.app.arguments import Bool, Int, Json, Float
 from utils.function import box_cluster, detect_box, detect_angle, ocr_batch
 from text.keras_detect import text_detect
@@ -75,10 +76,13 @@ def SPOCRComac(context):
         if PARAMETER["chineseModel"]:
             alphabet = alphabetChinese
             if LSTMFLAG:
+                logger.info("Use chinese lstm model")
                 ocrModel = ocrModelTorchLstm
             else:
+                logger.info("Use chinese dense model")
                 ocrModel = ocrModelTorchDense
         else:
+            logger.info("Use english model")
             ocrModel = ocrModelTorchEng
             alphabet = alphabetEnglish
             LSTMFLAG = True
@@ -101,80 +105,77 @@ def SPOCRComac(context):
         if os.path.exists(ocrModel):
             crnn.load_weights(ocrModel)
         else:
-            print("download model or tranform model with tools!")
+            return {
+                "data": None,
+                "status": "fail",
+                "reason": "请使用其他模型",
+                "log": "wrong model",
+            }
 
-        images = [inputImage["data"]]
-        output = {}
-        for i, image_base64 in enumerate(images):
-            filePath = "image.png"
-            with open(filePath, "wb") as f:
-                f.write(base64.b64decode(image_base64))
-            img = image.read(filePath)[:, :, ::-1]
-            img, angle = detect_angle(img, angle_detect)
+        filePath = "image.png"
+        with open(filePath, "wb") as f:
+            f.write(base64.b64decode(inputImage["data"]))
+        img = image.read(filePath)[:, :, ::-1]
+        img, angle = detect_angle(img, angle_detect)
 
-            boxes, scores = detect_box(
-                img,
-                text_detect,
-                scale=PARAMETER["scale"],
-                maxScale=PARAMETER["maxScale"],
-            )
-            boxes, scores = box_cluster(
+        boxes, scores = detect_box(
+            img, text_detect, scale=PARAMETER["scale"], maxScale=PARAMETER["maxScale"]
+        )
+        boxes, scores = box_cluster(
+            img,
+            boxes,
+            scores,
+            TextDetector,
+            MAX_HORIZONTAL_GAP=PARAMETER["maxHorizontalGap"],  ##字符之间的最大间隔，用于文本行的合并
+            MIN_V_OVERLAPS=PARAMETER["minVOverlaps"],
+            MIN_SIZE_SIM=PARAMETER["minSizeSim"],
+            TEXT_PROPOSALS_MIN_SCORE=PARAMETER["textProposalsMinScore"],
+            TEXT_PROPOSALS_NMS_THRESH=PARAMETER["textProposalsNmsThresh"],
+            TEXT_LINE_NMS_THRESH=PARAMETER["textLineNmsThresh"],  ##文本行之间测iou值
+            LINE_MIN_SCORE=PARAMETER["lineMinScore"],
+        )
+        boxes = sort_box(boxes)
+
+        if boxes:
+            textLine = False
+        if textLine:
+            H, W = img.shape[:2]
+            partImg = Image.fromarray(img)
+            text = crnn.predict(partImg.convert("L"))
+            output = {"text": text, "name": "0", "box": [0, 0, W, 0, W, H, 0, H]}
+        else:
+            res = ocr_batch(
                 img,
                 boxes,
-                scores,
-                TextDetector,
-                MAX_HORIZONTAL_GAP=PARAMETER["maxHorizontalGap"],  ##字符之间的最大间隔，用于文本行的合并
-                MIN_V_OVERLAPS=PARAMETER["minVOverlaps"],
-                MIN_SIZE_SIM=PARAMETER["minSizeSim"],
-                TEXT_PROPOSALS_MIN_SCORE=PARAMETER["textProposalsMinScore"],
-                TEXT_PROPOSALS_NMS_THRESH=PARAMETER["textProposalsNmsThresh"],
-                TEXT_LINE_NMS_THRESH=PARAMETER["textLineNmsThresh"],  ##文本行之间测iou值
-                LINE_MIN_SCORE=PARAMETER["lineMinScore"],
+                crnn.predict_job,
+                PARAMETER["leftAdjustAlph"],
+                PARAMETER["rightAdjustAlph"],
             )
-            boxes = sort_box(boxes)
+            for j, info in enumerate(res):
+                del info["img"]
+            output = res
 
-            if boxes:
-                textLine = False
-            if textLine:
-                H, W = img.shape[:2]
-                partImg = Image.fromarray(img)
-                text = crnn.predict(partImg.convert("L"))
-                output.update(
-                    {i: {"text": text, "name": "0", "box": [0, 0, W, 0, W, H, 0, H]}}
-                )
-            else:
-                res = ocr_batch(
-                    img,
-                    boxes,
-                    crnn.predict_job,
-                    PARAMETER["leftAdjustAlph"],
-                    PARAMETER["rightAdjustAlph"],
-                )
-                for j, info in enumerate(res):
-                    del info["img"]
-                output.update({i: res})
-
-            result = union_rbox(output[i], 0.2)
-            res = [
-                {
-                    "text": x["text"],
-                    "name": str(i),
-                    "box": {
-                        "cx": x["cx"],
-                        "cy": x["cy"],
-                        "w": x["w"],
-                        "h": x["h"],
-                        "angle": x["degree"],
-                    },
-                }
-                for i, x in enumerate(result)
-            ]
-            res = (
-                adjust_box_to_origin(img, angle, res)
-                if angle is not None
-                else adjust_box_to_origin(img, 0, res)
-            )
-            output.update({i: res})
+        result = union_rbox(output, 0.2)
+        res = [
+            {
+                "text": x["text"],
+                "name": str(i),
+                "box": {
+                    "cx": x["cx"],
+                    "cy": x["cy"],
+                    "w": x["w"],
+                    "h": x["h"],
+                    "angle": x["degree"],
+                },
+            }
+            for i, x in enumerate(result)
+        ]
+        res = (
+            adjust_box_to_origin(img, angle, res)
+            if angle is not None
+            else adjust_box_to_origin(img, 0, res)
+        )
+        output = res
         return {"data": output, "status": "success", "reason": None, "log": None}
     except Exception as e:
         return {
