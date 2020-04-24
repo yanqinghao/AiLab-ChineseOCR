@@ -3,8 +3,10 @@ from __future__ import absolute_import, print_function
 
 import os
 import base64
-import suanpan
+import pytesseract
+from io import BytesIO
 from PIL import Image
+import suanpan
 from suanpan.app import app
 from suanpan.utils import image
 from suanpan.log import logger
@@ -70,7 +72,6 @@ def SPOCRComac(context):
     try:
         if inputImage.get("parameter"):
             PARAMETER.update(inputImage["parameter"])
-
         textLine = True
         LSTMFLAG = PARAMETER["LSTMFLAG"]
         if PARAMETER["chineseModel"]:
@@ -83,14 +84,31 @@ def SPOCRComac(context):
                 ocrModel = ocrModelTorchDense
         else:
             logger.info("Use english model")
-            ocrModel = ocrModelTorchEng
-            alphabet = alphabetEnglish
-            LSTMFLAG = True
+            img = Image.open(BytesIO(base64.b64decode(inputImage["data"])))
+            res = pytesseract.image_to_data(img, lang="eng", output_type="dict")
+            output = []
+            for i, text in enumerate(res["text"]):
+                if len(text) > 0:
+                    output.append(
+                        {
+                            "name": str(i),
+                            "text": text,
+                            "box": [
+                                res["left"][i],
+                                res["top"][i],
+                                res["left"][i] + res["width"][i],
+                                res["top"][i],
+                                res["left"][i] + res["width"][i],
+                                res["top"][i] + res["height"][i],
+                                res["left"][i],
+                                res["top"][i] + res["height"][i],
+                            ],
+                        }
+                    )
+            return {"data": output, "status": "success", "reason": None, "log": None}
 
         nclass = len(alphabet) + 1
-
         GPU = True if PARAMETER["GPU"] > 0 else False
-
         crnn = CRNN(
             32,
             1,
@@ -101,7 +119,6 @@ def SPOCRComac(context):
             GPU=GPU,
             alphabet=alphabet,
         )
-
         if os.path.exists(ocrModel):
             crnn.load_weights(ocrModel)
         else:
@@ -111,13 +128,11 @@ def SPOCRComac(context):
                 "reason": "请使用其他模型",
                 "log": "wrong model",
             }
-
         filePath = "image.png"
         with open(filePath, "wb") as f:
             f.write(base64.b64decode(inputImage["data"]))
         img = image.read(filePath)[:, :, ::-1]
         img, angle = detect_angle(img, angle_detect)
-
         boxes, scores = detect_box(
             img, text_detect, scale=PARAMETER["scale"], maxScale=PARAMETER["maxScale"]
         )
@@ -135,7 +150,6 @@ def SPOCRComac(context):
             LINE_MIN_SCORE=PARAMETER["lineMinScore"],
         )
         boxes = sort_box(boxes)
-
         if boxes:
             textLine = False
         if textLine:
@@ -154,7 +168,6 @@ def SPOCRComac(context):
             for j, info in enumerate(res):
                 del info["img"]
             output = res
-
         result = union_rbox(output, 0.2)
         res = [
             {
