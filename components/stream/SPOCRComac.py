@@ -15,8 +15,8 @@ from utils.function import box_cluster, detect_box, detect_angle, ocr_batch
 from text.keras_detect import text_detect
 from text.opencv_dnn_detect import angle_detect
 from text.detector.detectors import TextDetector
-from config import ocrModelTorchDense, ocrModelTorchLstm, ocrModelTorchEng
-from crnn.keys import alphabetChinese, alphabetEnglish
+from config import ocrModelTorchDense, ocrModelTorchLstm
+from crnn.keys import alphabetChinese
 from crnn.network_torch import CRNN
 from apphelper.image import union_rbox, adjust_box_to_origin, sort_box
 
@@ -48,7 +48,7 @@ def afterInit(context):
 
 
 @app.input(Json(key="inputData1"))
-@app.param(Bool(key="chineseModel", default=True))
+@app.param(Int(key="chineseModel", default=1))
 @app.param(Bool(key="LSTMFLAG", default=True))
 @app.param(Float(key="leftAdjustAlph", default=0.01))
 @app.param(Float(key="rightAdjustAlph", default=0.01))
@@ -74,7 +74,7 @@ def SPOCRComac(context):
             PARAMETER.update(inputImage["parameter"])
         textLine = True
         LSTMFLAG = PARAMETER["LSTMFLAG"]
-        if PARAMETER["chineseModel"]:
+        if PARAMETER["chineseModel"] == 1:
             alphabet = alphabetChinese
             if LSTMFLAG:
                 logger.info("Use chinese lstm model")
@@ -82,7 +82,7 @@ def SPOCRComac(context):
             else:
                 logger.info("Use chinese dense model")
                 ocrModel = ocrModelTorchDense
-        else:
+        elif PARAMETER["chineseModel"] == 0:
             logger.info("Use english model")
             img = Image.open(BytesIO(base64.b64decode(inputImage["data"])))
             res = pytesseract.image_to_data(img, lang="eng", output_type="dict")
@@ -106,6 +106,37 @@ def SPOCRComac(context):
                         }
                     )
             return {"data": output, "status": "success", "reason": None, "log": None}
+        elif PARAMETER["chineseModel"] == 2:
+            logger.info("Use english model")
+            img = Image.open(BytesIO(base64.b64decode(inputImage["data"])))
+            res = pytesseract.image_to_data(img, lang="chi_sim+eng", output_type="dict")
+            output = []
+            for i, text in enumerate(res["text"]):
+                if len(text) > 0:
+                    output.append(
+                        {
+                            "name": str(i),
+                            "text": text,
+                            "box": [
+                                res["left"][i],
+                                res["top"][i],
+                                res["left"][i] + res["width"][i],
+                                res["top"][i],
+                                res["left"][i] + res["width"][i],
+                                res["top"][i] + res["height"][i],
+                                res["left"][i],
+                                res["top"][i] + res["height"][i],
+                            ],
+                        }
+                    )
+            return {"data": output, "status": "success", "reason": None, "log": None}
+        else:
+            return {
+                "data": None,
+                "status": "fail",
+                "reason": "PLS SET chineseModel in (0,1,2)",
+                "log": "Unknown chineseModel Type",
+            }
 
         nclass = len(alphabet) + 1
         GPU = True if PARAMETER["GPU"] > 0 else False
