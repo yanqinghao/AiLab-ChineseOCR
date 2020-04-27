@@ -10,6 +10,7 @@ import suanpan
 from suanpan.app import app
 from suanpan.utils import image
 from suanpan.log import logger
+from suanpan.storage import storage
 from suanpan.app.arguments import Bool, Int, Json, Float
 from utils.function import box_cluster, detect_box, detect_angle, ocr_batch
 from text.keras_detect import text_detect
@@ -67,11 +68,12 @@ def SPOCRComac(context):
     global PARAMETER
 
     args = context.args
-    inputImage = args.inputData1
+    inputData = args.inputData1
+    dataType = inputData.get("dataType", "base64")
 
     try:
-        if inputImage.get("parameter"):
-            PARAMETER.update(inputImage["parameter"])
+        if inputData.get("parameter"):
+            PARAMETER.update(inputData["parameter"])
         textLine = True
         LSTMFLAG = PARAMETER["LSTMFLAG"]
         if PARAMETER["chineseModel"] == 1:
@@ -84,7 +86,20 @@ def SPOCRComac(context):
                 ocrModel = ocrModelTorchDense
         elif PARAMETER["chineseModel"] == 0:
             logger.info("Use english model")
-            img = Image.open(BytesIO(base64.b64decode(inputImage["data"])))
+            if dataType == "base64":
+                img = Image.open(BytesIO(base64.b64decode(inputData["data"])))
+            elif dataType == "filePath":
+                filePath = os.path.basename(inputData["data"])
+                storage.download(inputData["data"], filePath)
+                img = Image.open(filePath)
+            else:
+                return {
+                    "data": None,
+                    "status": "fail",
+                    "reason": "PLS SET dataType in (base64,filePath)",
+                    "log": "Unknown dataType",
+                }
+
             res = pytesseract.image_to_data(img, lang="eng", output_type="dict")
             output = []
             for i, text in enumerate(res["text"]):
@@ -108,7 +123,19 @@ def SPOCRComac(context):
             return {"data": output, "status": "success", "reason": None, "log": None}
         elif PARAMETER["chineseModel"] == 2:
             logger.info("Use english model")
-            img = Image.open(BytesIO(base64.b64decode(inputImage["data"])))
+            if dataType == "base64":
+                img = Image.open(BytesIO(base64.b64decode(inputData["data"])))
+            elif dataType == "filePath":
+                filePath = os.path.basename(inputData["data"])
+                storage.download(inputData["data"], filePath)
+                img = Image.open(filePath)
+            else:
+                return {
+                    "data": None,
+                    "status": "fail",
+                    "reason": "PLS SET dataType in (base64,filePath)",
+                    "log": "Unknown dataType",
+                }
             res = pytesseract.image_to_data(img, lang="chi_sim+eng", output_type="dict")
             output = []
             for i, text in enumerate(res["text"]):
@@ -159,9 +186,20 @@ def SPOCRComac(context):
                 "reason": "请使用其他模型",
                 "log": "wrong model",
             }
-        filePath = "image.png"
-        with open(filePath, "wb") as f:
-            f.write(base64.b64decode(inputImage["data"]))
+        if dataType == "base64":
+            filePath = "image.png"
+            with open(filePath, "wb") as f:
+                f.write(base64.b64decode(inputData["data"]))
+        elif dataType == "filePath":
+            filePath = os.path.basename(inputData["data"])
+            storage.download(inputData["data"], filePath)
+        else:
+            {
+                "data": None,
+                "status": "fail",
+                "reason": "PLS SET dataType in (base64,filePath)",
+                "log": "Unknown dataType",
+            }
         img = image.read(filePath)[:, :, ::-1]
         img, angle = detect_angle(img, angle_detect)
         boxes, scores = detect_box(
